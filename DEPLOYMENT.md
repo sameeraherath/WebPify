@@ -32,7 +32,8 @@ This guide will help you deploy WebPify to Vercel (frontend) and Render (backend
      - **Build Command**: `cd server && pip install -r requirements.txt`
      - **Start Command**: `cd server && uvicorn main:app --host 0.0.0.0 --port $PORT`
      - **Root Directory**: Leave empty
-     - **Python Version**: `3.11.0`
+     - **Python Version**: `3.13.0` (or 3.11.0 - both work)
+   - **IMPORTANT**: Make sure to use `cd server &&` prefix in build and start commands
    - Click "Create Web Service"
 
 4. **Wait for Build & Deploy**
@@ -111,10 +112,18 @@ After deployment, you can restrict CORS to only allow your Vercel domain:
 - Make sure backend CORS allows your frontend domain
 - Check that `allow_origins` includes your Vercel URL
 
-### Build Failures
+### Build Failures (Pillow Error)
+**If you see:** `KeyError: '__version__'` or Pillow build errors
+- **Cause**: Pillow version incompatibility with Python 3.13
+- **Fix**: Latest code uses Pillow >=10.4.0 which supports Python 3.13
+- Make sure your `requirements.txt` has: `Pillow>=10.4.0,<11.0.0`
+
+### Build Failures (General)
 - Check build logs in Render/Vercel dashboard
 - Ensure all dependencies are in `requirements.txt` (backend)
 - Ensure all dependencies are in `package.json` (frontend)
+- **Critical**: Build command must be `cd server && pip install -r requirements.txt`
+- **Critical**: Start command must be `cd server && uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 ### API Connection Issues
 - Verify `REACT_APP_API_URL` environment variable is set correctly
