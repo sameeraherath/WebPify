@@ -402,53 +402,18 @@ The application runs in development mode with hot-reload enabled:
 
 ### System Architecture Overview
 
-```mermaid
-graph TB
-    subgraph "Frontend (React)"
-        UI[React UI Components]
-        FU[FileUpload Component]
-        CP[Conversion Progress]
-        CR[Conversion Results]
-    end
-    
-    subgraph "HTTP Communication"
-        API[API Request]
-        CORS[CORS Middleware]
-    end
-    
-    subgraph "Backend (FastAPI)"
-        Router[FastAPI Routes]
-        ConvertAPI[/api/convert]
-        HealthAPI[/api/health]
-    end
-    
-    subgraph "Processing"
-        Validator[File Validator]
-        Converter[Image Converter]
-        Pillow[Pillow Library]
-        ZIP[JSZip/ZipFile]
-    end
-    
-    subgraph "Response"
-        SingleFile[Single WebP File]
-        MultiFile[ZIP Archive]
-    end
-    
-    UI --> FU
-    FU --> CP
-    CP --> API
-    API --> CORS
-    CORS --> Router
-    Router --> ConvertAPI
-    ConvertAPI --> Validator
-    Validator --> Converter
-    Converter --> Pillow
-    Converter --> ZIP
-    Pillow --> SingleFile
-    ZIP --> MultiFile
-    SingleFile --> CR
-    MultiFile --> CR
-    CR --> UI
+```
+┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│    Frontend      │    │     Backend      │    │  Dependencies   │
+│   (React 18)     │    │   (FastAPI)      │    │   & Runtime     │
+├──────────────────┤    ├──────────────────┤    ├──────────────────┤
+│ • React Router   │◄──►│ • FastAPI        │    │ • Python 3.8+    │
+│ • File Upload    │    │ • Uvicorn Server │    │ • Pillow         │
+│ • Progress Bar   │    │ • Image Converter│    │ • Node.js        │
+│ • Results Display│    │ • File Validation│    │ • NPM            │
+│ • JSZip          │    │ • CORS Middleware│    │ • Tailwind CSS   │
+│ • Tailwind CSS   │    │ • ZIP Generator  │    │ • React Scripts  │
+└──────────────────┘    └──────────────────┘    └──────────────────┘
 ```
 
 ### Data Flow Diagram
