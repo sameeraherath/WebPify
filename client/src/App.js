@@ -11,12 +11,16 @@ function App() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [convertedFiles, setConvertedFiles] = useState([]);
   const [isConverting, setIsConverting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const API_URL = 'http://localhost:8000/api/convert';
 
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
     if (files.length > 0) {
       setSelectedFiles(files);
       setConvertedFiles([]);
+      setError(null);
     }
   };
 
@@ -29,29 +33,95 @@ function App() {
     if (!selectedFiles || selectedFiles.length === 0) return;
     
     setIsConverting(true);
+    setError(null);
     
-    // Simulate conversion process
-    setTimeout(() => {
+    try {
+      const formData = new FormData();
+      
+      // Add all files to FormData
+      selectedFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      // Add quality parameter
+      formData.append('quality', '85');
+      
+      // Send request to API
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Conversion failed' }));
+        throw new Error(errorData.detail || `Server error: ${response.status}`);
+      }
+      
+      // Handle response based on content type
+      const contentType = response.headers.get('content-type');
+      const blob = await response.blob();
+      
+      if (contentType === 'application/zip') {
+        // Multiple files - create download for ZIP
+        const zipUrl = URL.createObjectURL(blob);
+        setConvertedFiles([{
+          name: 'WebPify_converted_images.zip',
+          size: blob.size,
+          url: zipUrl,
+          isZip: true
+        }]);
+      } else {
+        // Single file - extract filename from Content-Disposition header
+        const disposition = response.headers.get('content-disposition');
+        let filename = 'converted_image.webp';
+        
+        if (disposition) {
+          const filenameMatch = disposition.match(/filename="?([^"]+)"?/);
+          if (filenameMatch) {
+            filename = filenameMatch[1];
+          }
+        }
+        
+        const fileUrl = URL.createObjectURL(blob);
+        setConvertedFiles([{
+          name: filename,
+          size: blob.size,
+          url: fileUrl,
+          isZip: false
+        }]);
+      }
+    } catch (err) {
+      console.error('Conversion error:', err);
+      setError(err.message || 'Failed to convert images. Please try again.');
+    } finally {
       setIsConverting(false);
-      const converted = selectedFiles.map(file => ({
-        name: file.name.replace(/\.[^/.]+$/, '.webp'),
-        size: Math.round(file.size * 0.7), // Simulate 30% size reduction
-        url: URL.createObjectURL(file)
-      }));
-      setConvertedFiles(converted);
-    }, 2000);
+    }
   };
 
   const handleDownload = (index) => {
     if (convertedFiles[index]) {
+      const file = convertedFiles[index];
       const link = document.createElement('a');
-      link.href = convertedFiles[index].url;
-      link.download = convertedFiles[index].name;
+      link.href = file.url;
+      link.download = file.name;
       link.click();
     }
   };
 
   const handleDownloadAllAsZip = async () => {
+    // For single file WebP, just trigger download
+    if (convertedFiles.length === 1) {
+      handleDownload(0);
+      return;
+    }
+    
+    // If we already have a ZIP from the API, just download it
+    if (convertedFiles[0]?.isZip) {
+      handleDownload(0);
+      return;
+    }
+
+    // Otherwise create a ZIP from individual files
     if (!convertedFiles || convertedFiles.length === 0) return;
 
     const zip = new JSZip();
@@ -97,6 +167,12 @@ function App() {
             />
 
             <ConversionProgress isConverting={isConverting} fileCount={selectedFiles.length} />
+
+            {error && (
+              <div className="mb-8 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                <p className="font-medium">Error: {error}</p>
+              </div>
+            )}
 
             <ConversionResults 
               convertedFiles={convertedFiles}
