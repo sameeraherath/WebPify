@@ -13,7 +13,27 @@ function App() {
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/convert';
+  // Detect environment and use appropriate backend URL
+  const getApiUrl = () => {
+    // If environment variable is set, use it
+    if (import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL;
+    }
+    
+    // Check if we're in production (Vercel or other production domains)
+    const hostname = window.location.hostname;
+    const isProduction = hostname !== 'localhost' && hostname !== '127.0.0.1';
+    
+    // Production backend URL
+    if (isProduction) {
+      return 'https://webpify-fpst.onrender.com/api/convert';
+    }
+    
+    // Development backend URL
+    return 'http://localhost:8000/api/convert';
+  };
+  
+  const API_URL = getApiUrl();
 
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
