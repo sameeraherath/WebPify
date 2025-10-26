@@ -8,7 +8,7 @@ Thank you for your interest in contributing to WebPify! This document provides g
 
 Before you begin, ensure you have:
 
-- **Node.js** (v14 or higher) and npm
+- **Node.js** (v18 or higher) and npm
 - **Python** (3.8 or higher) and pip
 - **Git** for version control
 - A GitHub account
@@ -41,6 +41,12 @@ Before you begin, ensure you have:
    ```bash
    cd ../client
    npm install
+   ```
+
+5. **Optional: Create a `.env` file** in `client/` for custom configuration:
+   ```bash
+   # client/.env
+   VITE_API_URL=http://localhost:8000/api/convert
    ```
 
 ## Development Workflow
@@ -91,10 +97,12 @@ Visit `http://localhost:8000/docs` to test the API endpoints.
 **Frontend Testing:**
 ```bash
 cd client
+npm run dev
+# or
 npm start
 ```
 
-Visit `http://localhost:3000` to test the UI.
+Visit `http://localhost:3000` (or the next available port) to test the UI.
 
 ### Submitting Your Changes
 
@@ -166,12 +174,21 @@ const FileUpload = ({ onFileSelect, maxFiles }) => {
 };
 ```
 
+**Note:** With Vite, files containing JSX must use the `.jsx` extension instead of `.js` for proper module resolution.
+
 ### CSS/Styling
 
 - Use Tailwind CSS utility classes
 - Maintain consistent spacing and colors
 - Ensure responsive design
 - Follow existing design patterns
+
+### Vite-Specific Guidelines
+
+- All files containing JSX must use `.jsx` extension
+- Use `import.meta.env.VITE_*` for environment variables (not `process.env`)
+- Leverage Vite's fast HMR for rapid development iteration
+- Build output goes to `build/` directory (configurable in `vite.config.js`)
 
 ## Project Structure
 
@@ -192,21 +209,24 @@ server/
 ```
 client/
 ├── src/
-│   ├── App.js           # Main application component
-│   ├── index.js         # Entry point
+│   ├── App.jsx          # Main application component
+│   ├── index.jsx        # Entry point
 │   ├── index.css        # Global styles
 │   └── components/
-│       ├── FileUpload.js
-│       ├── ConversionProgress.js
-│       ├── ConversionResults.js
-│       ├── Features.js
-│       ├── Header.js
-│       └── Footer.js
+│       ├── FileUpload.jsx
+│       ├── ConversionProgress.jsx
+│       ├── ConversionResults.jsx
+│       ├── Features.jsx
+│       ├── Header.jsx
+│       └── Footer.jsx
 ├── public/
-│   ├── index.html
+│   ├── fav.png
 │   └── manifest.json
+├── index.html           # Vite HTML template
+├── vite.config.js       # Vite configuration
 ├── package.json
-└── tailwind.config.js
+├── tailwind.config.js
+└── postcss.config.js
 ```
 
 ## Areas for Contribution
@@ -221,6 +241,8 @@ We welcome contributions in various areas:
 - [ ] Implement progressive WebP loading
 - [ ] Add batch download progress for large files
 - [ ] Create a CLI tool version
+- [ ] Add PWA support for offline functionality
+- [ ] Implement image preview before conversion
 
 ### Improvements
 

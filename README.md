@@ -45,9 +45,9 @@ WebPify is a fast and efficient image conversion tool that transforms various im
 
 ### Frontend
 - **React 18.2.0** - Modern UI framework
+- **Vite 5.4.21** - Fast build tool and development server
 - **Tailwind CSS 3.1.6** - Utility-first CSS framework
 - **JSZip 3.10.1** - ZIP file creation for batch downloads
-- **React Scripts** - Build tooling and development server
 
 ### Backend
 - **FastAPI 0.109.0** - Modern, fast Python web framework
@@ -61,21 +61,24 @@ WebPify is a fast and efficient image conversion tool that transforms various im
 WebPify/
 ├── client/                      # React frontend application
 │   ├── public/                  # Static assets
-│   │   ├── index.html           # HTML template
+│   │   ├── fav.png              # Favicon
 │   │   └── manifest.json       # Web app manifest
 │   ├── src/                     # Source code
 │   │   ├── components/          # React components
-│   │   │   ├── FileUpload.js    # File upload component
-│   │   │   ├── ConversionProgress.js  # Progress indicator
-│   │   │   ├── ConversionResults.js   # Results display
-│   │   │   ├── Features.js      # Features showcase
-│   │   │   ├── Header.js        # App header
-│   │   │   └── Footer.js        # App footer
-│   │   ├── App.js               # Main App component
-│   │   ├── index.js             # Entry point
+│   │   │   ├── FileUpload.jsx    # File upload component
+│   │   │   ├── ConversionProgress.jsx  # Progress indicator
+│   │   │   ├── ConversionResults.jsx   # Results display
+│   │   │   ├── Features.jsx      # Features showcase
+│   │   │   ├── Header.jsx        # App header
+│   │   │   └── Footer.jsx        # App footer
+│   │   ├── App.jsx               # Main App component
+│   │   ├── index.jsx             # Entry point
 │   │   └── index.css            # Global styles
+│   ├── index.html               # Vite HTML template
+│   ├── vite.config.js           # Vite configuration
 │   ├── package.json             # Frontend dependencies
-│   └── tailwind.config.js       # Tailwind configuration
+│   ├── tailwind.config.js       # Tailwind configuration
+│   └── postcss.config.js        # PostCSS configuration
 │
 ├── server/                      # Python FastAPI backend
 │   ├── utils/                   # Utility modules
@@ -92,7 +95,7 @@ WebPify/
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js** (v14 or higher) and npm
+- **Node.js** (v18 or higher) and npm
 - **Python** (3.8 or higher)
 - **pip** (Python package manager)
 
@@ -152,10 +155,12 @@ The server will start on `http://localhost:8000`
 
 From the `client` directory:
 ```bash
+npm run dev
+# or
 npm start
 ```
 
-The client will start on `http://localhost:3000`
+The client will start on `http://localhost:3000` (or the next available port)
 
 ### Access the Application
 
@@ -388,10 +393,10 @@ The application supports the following input formats:
 
 ### Development Mode
 
-The application runs in development mode with hot-reload enabled:
+The application runs in development mode with fast hot-reload enabled:
 
-- **Backend**: Auto-reloads on code changes
-- **Frontend**: Hot module replacement for instant updates
+- **Backend**: Auto-reloads on code changes with Uvicorn
+- **Frontend**: Instant HMR (Hot Module Replacement) with Vite for rapid development
 
 ### Code Structure
 
@@ -407,12 +412,12 @@ The application runs in development mode with hot-reload enabled:
 │    Frontend      │    │     Backend      │    │  Dependencies   │
 │   (React 18)     │    │   (FastAPI)      │    │   & Runtime     │
 ├──────────────────┤    ├──────────────────┤    ├──────────────────┤
-│ • React Router   │◄──►│ • FastAPI        │    │ • Python 3.8+    │
-│ • File Upload    │    │ • Uvicorn Server │    │ • Pillow         │
-│ • Progress Bar   │    │ • Image Converter│    │ • Node.js        │
-│ • Results Display│    │ • File Validation│    │ • NPM            │
-│ • JSZip          │    │ • CORS Middleware│    │ • Tailwind CSS   │
-│ • Tailwind CSS   │    │ • ZIP Generator  │    │ • React Scripts  │
+│ • File Upload    │◄──►│ • FastAPI        │    │ • Python 3.8+    │
+│ • Progress Bar   │    │ • Uvicorn Server │    │ • Pillow         │
+│ • Results Display│    │ • Image Converter│    │ • Node.js        │
+│ • JSZip          │    │ • File Validation│    │ • NPM            │
+│ • Tailwind CSS   │    │ • CORS Middleware│    │ • Tailwind CSS   │
+│ • Vite           │    │ • ZIP Generator  │    │ • Vite           │
 └──────────────────┘    └──────────────────┘    └──────────────────┘
 ```
 
@@ -479,9 +484,14 @@ The server can be configured in `server/start.py`:
 
 ### Frontend Configuration
 
-API endpoint is configured in `client/src/App.js`:
+API endpoint is configured in `client/src/App.jsx`:
 ```javascript
-const API_URL = 'http://localhost:8000/api/convert';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/convert';
+```
+
+You can create a `.env` file in the `client` directory to set custom environment variables:
+```bash
+VITE_API_URL=http://localhost:8000/api/convert
 ```
 
 ### Quality Settings
@@ -511,11 +521,26 @@ pip install -r requirements.txt
 
 **Port 3000 already in use:**
 ```bash
-# The React dev server will prompt to use another port automatically
+# Vite will automatically try the next available port (3001, 3002, etc.)
+# Or modify the port in vite.config.js
 ```
 
 **Module not found:**
 ```bash
+npm install
+```
+
+**Build errors:**
+
+**On Windows (PowerShell):**
+```bash
+Remove-Item -Recurse -Force node_modules, package-lock.json
+npm install
+```
+
+**On macOS/Linux:**
+```bash
+rm -rf node_modules package-lock.json
 npm install
 ```
 

@@ -50,7 +50,7 @@ This guide will help you deploy WebPify to Vercel (frontend) and Render (backend
    - Click "Add New..." → "Project"
    - Import your WebPify repository
    - Configure the project:
-     - **Framework Preset**: Create React App
+     - **Framework Preset**: Vite
      - **Root Directory**: `client/`
      - **Build Command**: `npm run build`
      - **Output Directory**: `build`
@@ -59,7 +59,7 @@ This guide will help you deploy WebPify to Vercel (frontend) and Render (backend
 3. **Add Environment Variable**
    - Click "Environment Variables"
    - Add new variable:
-     - **Name**: `REACT_APP_API_URL`
+     - **Name**: `VITE_API_URL`
      - **Value**: `https://your-app.onrender.com/api/convert`
        (Replace with your actual Render URL)
      - **Environments**: Production, Preview, Development
@@ -126,14 +126,14 @@ After deployment, you can restrict CORS to only allow your Vercel domain:
 - **Critical**: Start command must be `cd server && uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 ### API Connection Issues
-- Verify `REACT_APP_API_URL` environment variable is set correctly
+- Verify `VITE_API_URL` environment variable is set correctly
 - Check that backend is running (visit health endpoint)
 - Check browser console for error messages
 
 ## 📝 Environment Variables Summary
 
 ### Vercel (Frontend)
-- `REACT_APP_API_URL` - Your Render backend URL
+- `VITE_API_URL` - Your Render backend URL
 
 ### Render (Backend)
 - `PORT` - Automatically set by Render
