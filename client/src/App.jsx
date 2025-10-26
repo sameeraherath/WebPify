@@ -15,29 +15,35 @@ function App() {
 
   // Detect environment and use appropriate backend URL
   const getApiUrl = () => {
+    let baseUrl = null;
+    
     // If environment variable is set, use it
     if (import.meta.env.VITE_API_URL) {
-      const envUrl = import.meta.env.VITE_API_URL;
-      console.log('Using API URL from environment:', envUrl);
-      return envUrl;
+      baseUrl = import.meta.env.VITE_API_URL;
+      console.log('Using API URL from environment:', baseUrl);
+    } else {
+      // Check if we're in production (Vercel or other production domains)
+      const hostname = window.location.hostname;
+      const isProduction = hostname !== 'localhost' && hostname !== '127.0.0.1';
+      
+      if (isProduction) {
+        baseUrl = 'https://webpify-fpst.onrender.com';
+        console.log('Using production base URL:', baseUrl);
+        console.log('Current hostname:', hostname);
+      } else {
+        baseUrl = 'http://localhost:8000';
+        console.log('Using development base URL:', baseUrl);
+      }
     }
     
-    // Check if we're in production (Vercel or other production domains)
-    const hostname = window.location.hostname;
-    const isProduction = hostname !== 'localhost' && hostname !== '127.0.0.1';
-    
-    // Production backend URL
-    if (isProduction) {
-      const prodUrl = 'https://webpify-fpst.onrender.com/api/convert';
-      console.log('Using production API URL:', prodUrl);
-      console.log('Current hostname:', hostname);
-      return prodUrl;
+    // Ensure URL ends with /api/convert
+    if (!baseUrl.endsWith('/api/convert')) {
+      const separator = baseUrl.endsWith('/') ? '' : '/';
+      baseUrl = baseUrl + separator + 'api/convert';
+      console.log('Constructed full API URL:', baseUrl);
     }
     
-    // Development backend URL
-    const devUrl = 'http://localhost:8000/api/convert';
-    console.log('Using development API URL:', devUrl);
-    return devUrl;
+    return baseUrl;
   };
   
   const API_URL = getApiUrl();
@@ -86,14 +92,13 @@ function App() {
       console.log('Hostname:', window.location.hostname);
       console.log('Is production:', window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
       
-      // Ensure URL is absolute and ends with /api/convert
+      // Ensure URL is absolute
       const finalUrl = API_URL;
       if (!finalUrl || !finalUrl.startsWith('http')) {
         throw new Error(`Invalid API URL: ${finalUrl}`);
       }
-      if (!finalUrl.includes('/api/convert')) {
-        throw new Error(`API URL must include /api/convert path. Got: ${finalUrl}`);
-      }
+      
+      console.log('Final API URL:', finalUrl);
       
       const response = await fetch(finalUrl, {
         method: 'POST',
