@@ -9,6 +9,7 @@ import Footer from './components/Footer';
 
 function App() {
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [convertedFiles, setConvertedFiles] = useState([]);
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState(null);
@@ -57,12 +58,22 @@ function App() {
       setSelectedFiles(files);
       setConvertedFiles([]);
       setError(null);
+      
+      // Generate preview URLs
+      const urls = files.map(file => URL.createObjectURL(file));
+      setPreviewUrls(urls);
     }
   };
 
   const handleFileRemove = (index) => {
+    // Revoke the preview URL before removing
+    URL.revokeObjectURL(previewUrls[index]);
+    
     const newFiles = selectedFiles.filter((_, i) => i !== index);
+    const newUrls = previewUrls.filter((_, i) => i !== index);
+    
     setSelectedFiles(newFiles);
+    setPreviewUrls(newUrls);
   };
 
   const handleConvert = async () => {
@@ -214,6 +225,7 @@ function App() {
           <div className="bg-gray-100 rounded-2xl shadow-xl p-8">
             <FileUpload 
               selectedFiles={selectedFiles}
+              previewUrls={previewUrls}
               onFileSelect={handleFileSelect}
               onFileRemove={handleFileRemove}
               onConvert={handleConvert}

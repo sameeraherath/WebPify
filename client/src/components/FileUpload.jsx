@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FileUpload = ({ selectedFiles, onFileSelect, onFileRemove, onConvert, isConverting }) => {
+const FileUpload = ({ selectedFiles, previewUrls, onFileSelect, onFileRemove, onConvert, isConverting }) => {
   return (
     <div className="mb-8">
       <label className="block text-sm font-medium text-gray-800 mb-4">
@@ -48,17 +48,34 @@ const FileUpload = ({ selectedFiles, onFileSelect, onFileRemove, onConvert, isCo
           </h3>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {selectedFiles.map((file, index) => (
-              <div key={index} className="flex items-center justify-between bg-white p-3 rounded">
+              <div key={index} className="flex items-center gap-3 bg-white p-3 rounded hover:shadow-md transition-shadow">
+                {/* Thumbnail */}
+                <div className="w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                  {previewUrls[index] && (
+                    <img
+                      src={previewUrls[index]}
+                      alt={file.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"%3E%3Cpath strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /%3E%3C/svg%3E';
+                      }}
+                    />
+                  )}
+                </div>
+                
+                {/* File Info */}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-800 truncate">{file.name}</p>
                   <p className="text-sm text-gray-600">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
+                
+                {/* Remove Button */}
                 {onFileRemove && (
                   <button
                     onClick={() => onFileRemove(index)}
-                    className="ml-3 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-full p-1 transition-colors"
+                    className="text-red-600 hover:text-red-800 hover:bg-red-100 rounded-full p-2 transition-colors flex-shrink-0"
                     aria-label="Remove file"
                   >
                     <svg
