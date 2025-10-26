@@ -17,7 +17,9 @@ function App() {
   const getApiUrl = () => {
     // If environment variable is set, use it
     if (import.meta.env.VITE_API_URL) {
-      return import.meta.env.VITE_API_URL;
+      const envUrl = import.meta.env.VITE_API_URL;
+      console.log('Using API URL from environment:', envUrl);
+      return envUrl;
     }
     
     // Check if we're in production (Vercel or other production domains)
@@ -26,14 +28,22 @@ function App() {
     
     // Production backend URL
     if (isProduction) {
-      return 'https://webpify-fpst.onrender.com/api/convert';
+      const prodUrl = 'https://webpify-fpst.onrender.com/api/convert';
+      console.log('Using production API URL:', prodUrl);
+      console.log('Current hostname:', hostname);
+      return prodUrl;
     }
     
     // Development backend URL
-    return 'http://localhost:8000/api/convert';
+    const devUrl = 'http://localhost:8000/api/convert';
+    console.log('Using development API URL:', devUrl);
+    return devUrl;
   };
   
   const API_URL = getApiUrl();
+  
+  // Log the final API URL at component load
+  console.log('API_URL initialized to:', API_URL);
 
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
@@ -56,6 +66,11 @@ function App() {
     setError(null);
     
     try {
+      // Validate API URL
+      if (!API_URL || API_URL.length === 0) {
+        throw new Error('API URL is not configured');
+      }
+      
       const formData = new FormData();
       
       // Add all files to FormData
@@ -67,10 +82,24 @@ function App() {
       formData.append('quality', '85');
       
       // Send request to API
-      const response = await fetch(API_URL, {
+      console.log('Sending request to:', API_URL);
+      console.log('Hostname:', window.location.hostname);
+      console.log('Is production:', window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
+      
+      // Ensure URL is absolute and ends with /api/convert
+      const finalUrl = API_URL;
+      if (!finalUrl || !finalUrl.startsWith('http')) {
+        throw new Error(`Invalid API URL: ${finalUrl}`);
+      }
+      if (!finalUrl.includes('/api/convert')) {
+        throw new Error(`API URL must include /api/convert path. Got: ${finalUrl}`);
+      }
+      
+      const response = await fetch(finalUrl, {
         method: 'POST',
         body: formData
       });
+      console.log('Response status:', response.status, response.statusText);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: 'Conversion failed' }));
