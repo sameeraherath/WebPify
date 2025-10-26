@@ -13,7 +13,7 @@ function App() {
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_URL = 'http://localhost:8000/api/convert';
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/convert';
 
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
