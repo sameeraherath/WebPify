@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import JSZip from "jszip";
 import Header from "./components/Header";
 import FileUpload from "./components/FileUpload";
