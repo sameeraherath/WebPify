@@ -1,5 +1,6 @@
 import { useState } from "react";
 import JSZip from "jszip";
+import LandingPage from "./components/LandingPage";
 import Header from "./components/Header";
 import FileUpload from "./components/FileUpload";
 import BatchRename from "./components/BatchRename";
@@ -9,12 +10,18 @@ import Features from "./components/Features";
 import Footer from "./components/Footer";
 
 function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [convertedFiles, setConvertedFiles] = useState([]);
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState(null);
   const [renamePattern, setRenamePattern] = useState(null);
+
+  // Show landing page if user hasn't clicked "Get Started"
+  if (showLanding) {
+    return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+  }
 
   // Detect environment and use appropriate backend URL
   const getApiUrl = () => {
