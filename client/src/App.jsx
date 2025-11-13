@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import JSZip from 'jszip';
-import Header from './components/Header';
-import FileUpload from './components/FileUpload';
-import ConversionProgress from './components/ConversionProgress';
-import ConversionResults from './components/ConversionResults';
-import Features from './components/Features';
-import Footer from './components/Footer';
+import { useState } from "react";
+import JSZip from "jszip";
+import Header from "./components/Header";
+import FileUpload from "./components/FileUpload";
+import BatchRename from "./components/BatchRename";
+import ConversionProgress from "./components/ConversionProgress";
+import ConversionResults from "./components/ConversionResults";
+import Features from "./components/Features";
+import Footer from "./components/Footer";
 
 function App() {
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -13,44 +14,45 @@ function App() {
   const [convertedFiles, setConvertedFiles] = useState([]);
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState(null);
+  const [renamePattern, setRenamePattern] = useState(null);
 
   // Detect environment and use appropriate backend URL
   const getApiUrl = () => {
     let baseUrl = null;
-    
+
     // If environment variable is set, use it
     if (import.meta.env.VITE_API_URL) {
       baseUrl = import.meta.env.VITE_API_URL;
-      console.log('Using API URL from environment:', baseUrl);
+      console.log("Using API URL from environment:", baseUrl);
     } else {
       // Check if we're in production (Vercel or other production domains)
       const hostname = window.location.hostname;
-      const isProduction = hostname !== 'localhost' && hostname !== '127.0.0.1';
-      
+      const isProduction = hostname !== "localhost" && hostname !== "127.0.0.1";
+
       if (isProduction) {
-        baseUrl = 'https://webpify-fpst.onrender.com';
-        console.log('Using production base URL:', baseUrl);
-        console.log('Current hostname:', hostname);
+        baseUrl = "https://webpify-fpst.onrender.com";
+        console.log("Using production base URL:", baseUrl);
+        console.log("Current hostname:", hostname);
       } else {
-        baseUrl = 'http://localhost:8000';
-        console.log('Using development base URL:', baseUrl);
+        baseUrl = "http://localhost:8000";
+        console.log("Using development base URL:", baseUrl);
       }
     }
-    
+
     // Ensure URL ends with /api/convert
-    if (!baseUrl.endsWith('/api/convert')) {
-      const separator = baseUrl.endsWith('/') ? '' : '/';
-      baseUrl = baseUrl + separator + 'api/convert';
-      console.log('Constructed full API URL:', baseUrl);
+    if (!baseUrl.endsWith("/api/convert")) {
+      const separator = baseUrl.endsWith("/") ? "" : "/";
+      baseUrl = baseUrl + separator + "api/convert";
+      console.log("Constructed full API URL:", baseUrl);
     }
-    
+
     return baseUrl;
   };
-  
+
   const API_URL = getApiUrl();
-  
+
   // Log the final API URL at component load
-  console.log('API_URL initialized to:', API_URL);
+  console.log("API_URL initialized to:", API_URL);
 
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
@@ -58,9 +60,9 @@ function App() {
       setSelectedFiles(files);
       setConvertedFiles([]);
       setError(null);
-      
+
       // Generate preview URLs
-      const urls = files.map(file => URL.createObjectURL(file));
+      const urls = files.map((file) => URL.createObjectURL(file));
       setPreviewUrls(urls);
     }
   };
@@ -68,96 +70,150 @@ function App() {
   const handleFileRemove = (index) => {
     // Revoke the preview URL before removing
     URL.revokeObjectURL(previewUrls[index]);
-    
+
     const newFiles = selectedFiles.filter((_, i) => i !== index);
     const newUrls = previewUrls.filter((_, i) => i !== index);
-    
+
     setSelectedFiles(newFiles);
     setPreviewUrls(newUrls);
   };
 
+  const handleApplyRenamePattern = (pattern) => {
+    setRenamePattern(pattern);
+  };
+
+  const generateFileName = (originalName, index, pattern) => {
+    if (!pattern) {
+      // Keep original name, just change extension
+      return originalName.replace(/\.[^/.]+$/, "") + ".webp";
+    }
+
+    const baseName = originalName.replace(/\.[^/.]+$/, "");
+    let newName = pattern.prefix || "";
+
+    if (pattern.pattern === "{name}") {
+      newName += baseName;
+    } else if (pattern.pattern === "{number}") {
+      const num = (pattern.startNumber + index).toString().padStart(3, "0");
+      newName += num;
+    } else if (pattern.pattern === "{date}") {
+      const date = new Date();
+      newName += date.toISOString().split("T")[0];
+      if (selectedFiles.length > 1) {
+        newName += "_" + (index + 1);
+      }
+    } else if (pattern.pattern === "{time}") {
+      const time = new Date();
+      newName += time.toTimeString().split(" ")[0].replace(/:/g, "-");
+      if (selectedFiles.length > 1) {
+        newName += "_" + (index + 1);
+      }
+    } else if (pattern.pattern === "{random}") {
+      newName += Math.random().toString(36).substring(2, 8);
+    }
+
+    newName += pattern.suffix || "";
+    return newName + ".webp";
+  };
+
   const handleConvert = async () => {
     if (!selectedFiles || selectedFiles.length === 0) return;
-    
+
     setIsConverting(true);
     setError(null);
-    
+
     try {
       // Validate API URL
       if (!API_URL || API_URL.length === 0) {
-        throw new Error('API URL is not configured');
+        throw new Error("API URL is not configured");
       }
-      
+
       const formData = new FormData();
-      
-      // Add all files to FormData
-      selectedFiles.forEach(file => {
-        formData.append('files', file);
+
+      // Add all files to FormData with custom names if pattern exists
+      selectedFiles.forEach((file, index) => {
+        const customName = renamePattern
+          ? generateFileName(file.name, index, renamePattern)
+          : file.name;
+
+        // Create a new File object with the custom name
+        const newFile = new File([file], customName, { type: file.type });
+        formData.append("files", newFile);
       });
-      
+
       // Add quality parameter
-      formData.append('quality', '85');
-      
+      formData.append("quality", "85");
+
       // Send request to API
-      console.log('Sending request to:', API_URL);
-      console.log('Hostname:', window.location.hostname);
-      console.log('Is production:', window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1');
-      
+      console.log("Sending request to:", API_URL);
+      console.log("Hostname:", window.location.hostname);
+      console.log(
+        "Is production:",
+        window.location.hostname !== "localhost" &&
+          window.location.hostname !== "127.0.0.1"
+      );
+
       // Ensure URL is absolute
       const finalUrl = API_URL;
-      if (!finalUrl || !finalUrl.startsWith('http')) {
+      if (!finalUrl || !finalUrl.startsWith("http")) {
         throw new Error(`Invalid API URL: ${finalUrl}`);
       }
-      
-      console.log('Final API URL:', finalUrl);
-      
+
+      console.log("Final API URL:", finalUrl);
+
       const response = await fetch(finalUrl, {
-        method: 'POST',
-        body: formData
+        method: "POST",
+        body: formData,
       });
-      console.log('Response status:', response.status, response.statusText);
-      
+      console.log("Response status:", response.status, response.statusText);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Conversion failed' }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ detail: "Conversion failed" }));
         throw new Error(errorData.detail || `Server error: ${response.status}`);
       }
-      
+
       // Handle response based on content type
-      const contentType = response.headers.get('content-type');
+      const contentType = response.headers.get("content-type");
       const blob = await response.blob();
-      
-      if (contentType === 'application/zip') {
+
+      if (contentType === "application/zip") {
         // Multiple files - create download for ZIP
         const zipUrl = URL.createObjectURL(blob);
-        setConvertedFiles([{
-          name: 'WebPify_converted_images.zip',
-          size: blob.size,
-          url: zipUrl,
-          isZip: true
-        }]);
+        setConvertedFiles([
+          {
+            name: "WebPify_converted_images.zip",
+            size: blob.size,
+            url: zipUrl,
+            isZip: true,
+          },
+        ]);
       } else {
         // Single file - extract filename from Content-Disposition header
-        const disposition = response.headers.get('content-disposition');
-        let filename = 'converted_image.webp';
-        
+        const disposition = response.headers.get("content-disposition");
+        let filename = "converted_image.webp";
+
         if (disposition) {
           const filenameMatch = disposition.match(/filename="?([^"]+)"?/);
           if (filenameMatch) {
             filename = filenameMatch[1];
           }
         }
-        
+
         const fileUrl = URL.createObjectURL(blob);
-        setConvertedFiles([{
-          name: filename,
-          size: blob.size,
-          url: fileUrl,
-          isZip: false
-        }]);
+        setConvertedFiles([
+          {
+            name: filename,
+            size: blob.size,
+            url: fileUrl,
+            isZip: false,
+          },
+        ]);
       }
     } catch (err) {
-      console.error('Conversion error:', err);
-      setError(err.message || 'Failed to convert images. Please try again.');
+      console.error("Conversion error:", err);
+      setError(err.message || "Failed to convert images. Please try again.");
     } finally {
       setIsConverting(false);
     }
@@ -166,7 +222,7 @@ function App() {
   const handleDownload = (index) => {
     if (convertedFiles[index]) {
       const file = convertedFiles[index];
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = file.url;
       link.download = file.name;
       link.click();
@@ -179,7 +235,7 @@ function App() {
       handleDownload(0);
       return;
     }
-    
+
     // If we already have a ZIP from the API, just download it
     if (convertedFiles[0]?.isZip) {
       handleDownload(0);
@@ -190,7 +246,7 @@ function App() {
     if (!convertedFiles || convertedFiles.length === 0) return;
 
     const zip = new JSZip();
-    
+
     // Fetch each file and add it to the zip
     for (let i = 0; i < convertedFiles.length; i++) {
       const file = convertedFiles[i];
@@ -204,14 +260,14 @@ function App() {
     }
 
     // Generate the zip file
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+
     // Create download link
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(zipBlob);
-    link.download = 'WebPify_converted_images.zip';
+    link.download = "WebPify_converted_images.zip";
     link.click();
-    
+
     // Clean up
     URL.revokeObjectURL(link.href);
   };
@@ -223,7 +279,7 @@ function App() {
 
         <div className="max-w-4xl mx-auto">
           <div className="bg-gray-100 rounded-2xl shadow-xl p-8">
-            <FileUpload 
+            <FileUpload
               selectedFiles={selectedFiles}
               previewUrls={previewUrls}
               onFileSelect={handleFileSelect}
@@ -232,7 +288,17 @@ function App() {
               isConverting={isConverting}
             />
 
-            <ConversionProgress isConverting={isConverting} fileCount={selectedFiles.length} />
+            {selectedFiles.length > 0 && (
+              <BatchRename
+                onApplyPattern={handleApplyRenamePattern}
+                fileCount={selectedFiles.length}
+              />
+            )}
+
+            <ConversionProgress
+              isConverting={isConverting}
+              fileCount={selectedFiles.length}
+            />
 
             {error && (
               <div className="mb-8 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
@@ -240,7 +306,7 @@ function App() {
               </div>
             )}
 
-            <ConversionResults 
+            <ConversionResults
               convertedFiles={convertedFiles}
               onDownload={handleDownload}
               onDownloadAllAsZip={handleDownloadAllAsZip}

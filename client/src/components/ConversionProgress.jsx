@@ -1,5 +1,3 @@
-import React from 'react';
-
 const ConversionProgress = ({ isConverting, fileCount = 1 }) => {
   if (!isConverting) return null;
 
@@ -9,7 +7,8 @@ const ConversionProgress = ({ isConverting, fileCount = 1 }) => {
         <div className="flex items-center">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800 mr-3"></div>
           <span className="text-gray-800 font-medium">
-            Converting {fileCount > 1 ? `${fileCount} images` : 'your image'} to WebP format...
+            Converting {fileCount > 1 ? `${fileCount} images` : "your image"} to
+            WebP format...
           </span>
         </div>
       </div>

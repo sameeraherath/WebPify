@@ -1,5 +1,3 @@
-import React from 'react';
-
 const ConversionResults = ({ convertedFiles, onDownload, onDownloadAllAsZip }) => {
   if (!convertedFiles || convertedFiles.length === 0) return null;
 
