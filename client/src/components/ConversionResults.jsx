@@ -1,4 +1,8 @@
-const ConversionResults = ({ convertedFiles, onDownload, onDownloadAllAsZip }) => {
+const ConversionResults = ({
+  convertedFiles,
+  onDownload,
+  onDownloadAllAsZip,
+}) => {
   if (!convertedFiles || convertedFiles.length === 0) return null;
 
   return (
@@ -31,15 +35,15 @@ const ConversionResults = ({ convertedFiles, onDownload, onDownloadAllAsZip }) =
       </div>
       <div className="space-y-3">
         {convertedFiles.map((file, index) => (
-          <div key={index} className="bg-gray-200 border border-gray-400 rounded-lg p-4">
+          <div
+            key={index}
+            className="bg-gray-200 border border-gray-400 rounded-lg p-4"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-gray-800">{file.name}</p>
                 <p className="text-sm text-gray-700">
                   {(file.size / 1024 / 1024).toFixed(2)} MB
-                  <span className="ml-2 text-gray-600">
-                    (30% smaller than original)
-                  </span>
                 </p>
               </div>
               <button
